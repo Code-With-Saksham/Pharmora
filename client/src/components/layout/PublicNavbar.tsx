@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
-import { Activity, Menu, X, ArrowRight, UserCircle, Shield, Store, Bike } from 'lucide-react';
+import { 
+  Activity, 
+  Menu, 
+  X, 
+  ArrowRight, 
+  UserCircle, 
+  Shield, 
+  Store, 
+  Bike, 
+  ShoppingCart,
+  Search,
+  MapPin
+} from 'lucide-react';
 import { UserRole } from '../../types';
 
 export const PublicNavbar: React.FC = () => {
   const { user, role, isDemoMode, switchDemoRole, logout } = useAuth();
+  const { cart, totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -32,7 +46,7 @@ export const PublicNavbar: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-medium">Developer Demo Mode Active:</span>
-            <span className="text-slate-300 hidden sm:inline">Explore PHARMORA without configuring Supabase credentials.</span>
+            <span className="text-slate-300 hidden sm:inline">Explore PHARMORA marketplace and inventory with simulated state.</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-slate-300 text-[11px]">Simulate Role:</span>
@@ -73,8 +87,13 @@ export const PublicNavbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-600">
-            <Link to="/" className="hover:text-brand-700 transition-colors">
-              Home
+            <Link to="/medicines" className="flex items-center gap-1.5 text-brand-800 font-semibold hover:text-brand-950 transition-colors">
+              <Search className="w-4 h-4 text-brand-600" />
+              <span>Find Medicines</span>
+            </Link>
+            <Link to="/pharmacies" className="flex items-center gap-1.5 hover:text-brand-700 transition-colors">
+              <MapPin className="w-4 h-4 text-slate-400" />
+              <span>Nearby Pharmacies</span>
             </Link>
             <Link to="/how-it-works" className="hover:text-brand-700 transition-colors">
               How it Works
@@ -82,13 +101,29 @@ export const PublicNavbar: React.FC = () => {
             <Link to="/about" className="hover:text-brand-700 transition-colors">
               About
             </Link>
-            <Link to="/contact" className="hover:text-brand-700 transition-colors">
-              Contact & Help
-            </Link>
           </nav>
 
-          {/* Desktop Auth CTAs */}
+          {/* Desktop Auth CTAs and Cart Button */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Cart Button */}
+            <Link
+              to="/cart"
+              className="relative p-2 text-slate-700 hover:text-brand-700 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5"
+              title="View Shopping Cart"
+            >
+              <ShoppingCart className="w-5 h-5 text-slate-700" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-brand-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                  {totalItems}
+                </span>
+              )}
+              {totalItems > 0 && (
+                <span className="text-xs font-semibold text-brand-900 hidden lg:inline">
+                  ₹{cart.subtotal.toFixed(0)}
+                </span>
+              )}
+            </Link>
+
             {user ? (
               <div className="flex items-center gap-3">
                 <Link to={getDashboardPath(role)}>
@@ -119,8 +154,21 @@ export const PublicNavbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
+          {/* Mobile Menu & Cart Button */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Link
+              to="/cart"
+              className="relative p-2 text-slate-700 rounded-lg"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingCart className="h-6 w-6" />
+              {totalItems > 0 && (
+                <span className="absolute 0 top-0 right-0 bg-brand-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -137,11 +185,35 @@ export const PublicNavbar: React.FC = () => {
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3">
           <nav className="flex flex-col space-y-2 text-base font-medium text-slate-700">
             <Link
-              to="/"
+              to="/medicines"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md hover:bg-slate-50"
+              className="px-3 py-2 rounded-md hover:bg-slate-50 flex items-center gap-2 font-semibold text-brand-800"
             >
-              Home
+              <Search className="w-4 h-4 text-brand-600" />
+              <span>Find Medicines</span>
+            </Link>
+            <Link
+              to="/pharmacies"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-50 flex items-center gap-2"
+            >
+              <MapPin className="w-4 h-4 text-slate-400" />
+              <span>Nearby Pharmacies</span>
+            </Link>
+            <Link
+              to="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-50 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-slate-500" />
+                <span>Shopping Cart</span>
+              </div>
+              {totalItems > 0 && (
+                <span className="bg-brand-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                  {totalItems} items
+                </span>
+              )}
             </Link>
             <Link
               to="/how-it-works"
@@ -210,3 +282,4 @@ export const PublicNavbar: React.FC = () => {
     </header>
   );
 };
+

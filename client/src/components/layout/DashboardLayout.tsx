@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 import {
@@ -22,6 +23,7 @@ import {
   User,
   Search,
   CheckCircle,
+  MapPin
 } from 'lucide-react';
 import { UserRole } from '../../types';
 
@@ -34,6 +36,7 @@ interface NavItem {
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, role, logout, isDemoMode, switchDemoRole } = useAuth();
+  const { totalItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,8 +47,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       case 'ADMIN':
         return [
           { label: 'Operations Overview', path: '/admin', icon: LayoutDashboard },
+          { label: 'Medicine Formulary', path: '/admin/catalog', icon: Package, badge: 'Phase 2' },
           { label: 'User Directory', path: '/admin/users', icon: Users },
-          { label: 'Pharmacy Approvals', path: '/admin/pharmacies', icon: Store, badge: 'Phase 1' },
+          { label: 'Pharmacy Approvals', path: '/admin/pharmacies', icon: Store, badge: 'Compliance' },
           { label: 'Partner Verifications', path: '/admin/partners', icon: Bike, badge: 'Phase 1' },
           { label: 'Security & Audit Logs', path: '/admin/audit', icon: FileCheck },
         ];
@@ -53,7 +57,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         return [
           { label: 'Store Overview', path: '/pharmacy', icon: LayoutDashboard },
           { label: 'Store Profile', path: '/pharmacy/profile', icon: Store },
-          { label: 'Inventory Catalog', path: '/pharmacy/inventory', icon: Package, badge: 'Upcoming' },
+          { label: 'Inventory Catalog', path: '/pharmacy/inventory', icon: Package, badge: 'Live' },
           { label: 'Orders & Handover', path: '/pharmacy/orders', icon: ShoppingBag, badge: 'Upcoming' },
           { label: 'Settings & Licences', path: '/pharmacy/settings', icon: Settings },
         ];
@@ -67,12 +71,15 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       default: // CUSTOMER
         return [
           { label: 'My Dashboard', path: '/customer', icon: LayoutDashboard },
-          { label: 'Medicine Search', path: '/customer/search', icon: Search, badge: 'Preview' },
+          { label: 'Find Medicines', path: '/customer/search', icon: Search, badge: 'Live' },
+          { label: 'Nearby Pharmacies', path: '/customer/pharmacies', icon: MapPin },
+          { label: 'Shopping Cart', path: '/customer/cart', icon: ShoppingBag, badge: totalItems > 0 ? `${totalItems}` : undefined },
           { label: 'Order History', path: '/customer/orders', icon: Package },
           { label: 'My Profile & Addresses', path: '/customer/profile', icon: User },
         ];
     }
   };
+
 
   const navItems = getNavItems(role);
 

@@ -531,7 +531,88 @@ npm run build
 
 ---
 
+## Phase 2: Pharmacy Management, Medicine Catalog, Discovery & Cart
+
+Phase 2 elevates PHARMORA from foundation and authentication into a fully functional local pharmacy marketplace.
+
+### Phase 2 Architecture & Core Capabilities
+
+1. **Standardized Central Medicine Formulary (`medicine_products`)**:
+   - Centralized database of verified Indian formulations with generic salts, strengths, dosage forms, packaging, manufacturers, and Schedule H prescription requirement flags.
+   - Decoupled from pharmacy listings: one central product formulation is referenced by multiple licensed pharmacies.
+   - Admin management UI to add, update, search, and toggle active formulations.
+
+2. **Pharmacy Management & Statutory Verification Lifecycle (`pharmacies`)**:
+   - Supports five verification states: `DRAFT`, `PENDING_VERIFICATION`, `VERIFIED`, `REJECTED`, `SUSPENDED`.
+   - Store owners can manage dispensary trade names, Form 20/21 drug licences, physical addresses, GPS geo-coordinates, operating hours, and submit profiles for administrative review.
+   - Regulatory security guardrail: Unverified, draft, rejected, or suspended pharmacies are strictly excluded from public medicine discovery and cannot receive orders.
+
+3. **Pharmacy-Specific Inventory Management (`pharmacy_inventory`)**:
+   - Store owners select standardized drugs from the central formulary and manage their stock quantities, selling prices in INR (₹), MRP, low-stock thresholds, batch numbers, and expiry dates.
+   - Strict database constraints: `selling_price <= mrp`, `stock_quantity >= 0`, and unique compound index on `(pharmacy_id, product_id)` preventing duplicate active listings.
+   - Distinguishes `IN_STOCK`, `LOW_STOCK`, `OUT_OF_STOCK`, and `UNAVAILABLE` states.
+
+4. **Customer Medicine Discovery & Multi-Store Price Comparison**:
+   - Normalized search matching medicine names, brand names, generic chemical salts, strengths, and dosage forms.
+   - Filter chips for dosage forms (Tablets, Capsules, Syrups, Inhalers, Gels) and OTC vs Schedule H prescription drugs.
+   - Aggregates lowest and highest available selling prices across nearby verified pharmacies.
+   - Interactive medicine detail modal comparing prices, stock levels, and operating hours across nearby stores.
+
+5. **Nearby Pharmacy Discovery**:
+   - Location-aware search by city, PIN code, and GPS coordinates using Haversine distance calculation.
+   - Displays pharmacy licence numbers, address particulars, and verified dispensary credentials.
+
+6. **Shopping Cart with Strict "One Pharmacy per Cart" Rule (`shopping_carts`)**:
+   - All financial totals (subtotals, delivery charges, item totals) are calculated server-side using current inventory pricing.
+   - Enforces the single-dispensary rule: if a patient attempts to add an item from a different store, the system flags an explicit conflict and prompts the customer to either keep their current cart or clear and switch pharmacies.
+   - Real-time stock validation prevents customers from ordering quantities exceeding available store stock.
+   - Persistent across browser reloads via database and localStorage fallback adapter.
+
+7. **Admin Pharmacy Verification & Compliance Desk**:
+   - Administrative review queue of submitted pharmacies.
+   - Form 20/21 licence verification, approval, rejection with mandatory statutory reason logging, and emergency operational suspension.
+   - Immutable audit logging (`pharmacy_verification_audit_logs`).
+
+### Phase 2 Database Migrations
+- `supabase/migrations/20261030000000_phase2_marketplace_schema.sql`:
+  - `pharmacy_verification_status` and `inventory_status` custom enums.
+  - `medicine_products` table with search indexing.
+  - `pharmacy_inventory` table with compound unique index and check constraints.
+  - `shopping_carts` and `shopping_cart_items` tables with cascade deletion.
+  - `pharmacy_verification_audit_logs` table.
+  - Row Level Security (RLS) policies protecting customer cart privacy, owner inventory isolation, and public verified discovery.
+
+### Phase 2 REST API Endpoints
+- `GET /api/catalog` — Central formulary listing with search, pagination, and dosage filters.
+- `POST /api/catalog` — Admin creation of standardized formulary drugs.
+- `GET /api/discovery/medicines` — Customer medicine search with price aggregation and verified store stock.
+- `GET /api/discovery/pharmacies` — Nearby verified pharmacy discovery by city/PIN code/coordinates.
+- `GET /api/inventory` — Pharmacy owner store inventory management.
+- `POST /api/inventory` — Add medicine to pharmacy inventory from central formulary.
+- `PUT /api/inventory/:id` — Update selling price, stock units, and low-stock thresholds.
+- `GET /api/cart` — Customer shopping cart retrieval with server-side totals.
+- `POST /api/cart/items` — Add item to cart with stock validation and one-pharmacy conflict check.
+- `PUT /api/cart/items/:id` — Update item quantity with live stock bounds.
+- `DELETE /api/cart/items/:id` — Remove item from cart.
+- `DELETE /api/cart` — Clear entire shopping cart.
+- `GET /api/pharmacy/profile` & `PUT /api/pharmacy/profile` — Store profile and operating hours.
+- `POST /api/pharmacy/submit-verification` — Submit pharmacy profile for state compliance review.
+- `GET /api/admin/pharmacies` — Administrative verification queue.
+- `PUT /api/admin/pharmacy/:id/status` — Approve, reject, or suspend pharmacy with audit logging.
+
+### Phase 2 Marketplace Navigation Map
+- **Find Medicines (Public / Customer):** `http://localhost:5173/medicines` (or `/customer/search`)
+- **Nearby Pharmacies:** `http://localhost:5173/pharmacies` (or `/customer/pharmacies`)
+- **Shopping Cart:** `http://localhost:5173/cart` (or `/customer/cart`)
+- **Pharmacy Store Inventory:** `http://localhost:5173/pharmacy/inventory`
+- **Pharmacy Profile & Licencing:** `http://localhost:5173/pharmacy/profile`
+- **Admin Formulary Catalog:** `http://localhost:5173/admin/catalog`
+- **Admin Pharmacy Verifications:** `http://localhost:5173/admin/pharmacies`
+
+---
+
 ## Project Status
+
 
 **Status:** In Development
 

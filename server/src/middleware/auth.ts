@@ -33,11 +33,36 @@ export const authenticateToken = async (
 
   const token = authHeader.split(' ')[1];
 
-  if (!supabaseAdmin) {
-    res.status(503).json({
-      success: false,
-      error: { message: 'Supabase authentication service is not configured on the backend.' },
-    });
+  // Developer Demonstration Mode Support:
+  // When live Supabase credentials are not configured or demo tokens are sent
+  if (!supabaseAdmin || token.startsWith('demo-token-') || token === 'demo-token') {
+    let role: 'CUSTOMER' | 'PHARMACY_OWNER' | 'DELIVERY_PARTNER' | 'ADMIN' = 'CUSTOMER';
+    let id = 'usr-demo-customer';
+    let full_name = 'Demo Customer';
+
+    if (token.includes('admin')) {
+      role = 'ADMIN';
+      id = 'usr-demo-admin';
+      full_name = 'Demo Administrator';
+    } else if (token.includes('pharmacy')) {
+      role = 'PHARMACY_OWNER';
+      id = 'usr-demo-pharmacy';
+      full_name = 'Rajesh Gupta (Pharmacist)';
+    } else if (token.includes('partner') || token.includes('delivery')) {
+      role = 'DELIVERY_PARTNER';
+      id = 'usr-demo-partner';
+      full_name = 'Demo Rider';
+    }
+
+    req.user = {
+      id,
+      email: `${role.toLowerCase()}@pharmora.local`,
+      role,
+      full_name,
+      status: 'ACTIVE',
+    };
+
+    next();
     return;
   }
 
@@ -84,3 +109,4 @@ export const authenticateToken = async (
     });
   }
 };
+
