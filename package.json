@@ -1,0 +1,21 @@
+{
+  "name": "pharmora",
+  "version": "0.1.0",
+  "description": "PHARMORA — Smart Hyperlocal Medicine Delivery Platform",
+  "private": true,
+  "scripts": {
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build:client": "npm --prefix client run build",
+    "build:server": "npm --prefix server run build",
+    "build": "npm run build:client && npm run build:server"
+  },
+  "keywords": [
+    "pharmacy",
+    "medicine-delivery",
+    "healthcare",
+    "hyperlocal"
+  ],
+  "author": "Pharmora Team",
+  "license": "UNLICENSED"
+}

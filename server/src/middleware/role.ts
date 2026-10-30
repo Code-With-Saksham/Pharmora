@@ -1,0 +1,27 @@
+import { Request, Response, NextFunction } from 'express';
+
+export type Role = 'CUSTOMER' | 'PHARMACY_OWNER' | 'DELIVERY_PARTNER' | 'ADMIN';
+
+export const requireRole = (allowedRoles: Role[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Unauthorized: Authentication required.' },
+      });
+      return;
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      res.status(403).json({
+        success: false,
+        error: {
+          message: `Access denied: Requires one of [${allowedRoles.join(', ')}]. Current role: ${req.user.role}`,
+        },
+      });
+      return;
+    }
+
+    next();
+  };
+};

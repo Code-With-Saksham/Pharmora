@@ -446,28 +446,88 @@ Use synthetic data and payment sandbox environments during development.
 
 ---
 
-## Getting Started
+## Getting Started & Phase 1 Execution
 
-The exact setup instructions will depend on the final repository structure.
+PHARMORA Phase 1 is organized as a clean decoupled workspace with a React/Vite frontend client and an Express/TypeScript backend API.
 
-A typical development setup will require:
+### Repository Architecture
+```text
+Pharmora/
+├── client/                     # Vite + React 18 + TypeScript + Tailwind CSS
+│   ├── src/
+│   │   ├── components/         # Reusable primitives, layouts, and role guards
+│   │   ├── context/            # AuthContext (Supabase Auth + Phase 1 Demo Provider)
+│   │   ├── lib/                # Supabase client and Indian formatting utilities
+│   │   ├── pages/              # Public, Auth, Customer, Pharmacy, Partner, Admin portals
+│   │   └── App.tsx             # Role-based protected routes
+│   └── package.json
+├── server/                     # Node.js + Express + TypeScript REST API
+│   ├── src/
+│   │   ├── config/             # Environment validation (Zod) and Supabase Admin SDK
+│   │   ├── middleware/         # Bearer token verification, RBAC guards, and logging
+│   │   ├── routes/             # Health, Auth, and Admin metrics endpoints
+│   │   └── server.ts
+│   └── package.json
+├── supabase/
+│   └── migrations/             # Phase 1 SQL migrations (Profiles, Roles, RLS policies)
+├── .env.example                # Documented environment variables template
+└── package.json                # Root orchestration scripts
+```
 
-1. Installing Node.js and the package manager selected for the project.
-2. Cloning the repository.
-3. Installing project dependencies.
-4. Creating a development Supabase project or configuring a local PostgreSQL database.
-5. Applying database migrations.
-6. Configuring authentication and private storage.
-7. Creating the required environment variables.
-8. Configuring optional map, payment, and notification integrations.
-9. Starting the frontend and backend development servers.
-10. Running tests before verifying the complete order journey.
+### 1. Prerequisites
+- **Node.js**: v20.x or higher
+- **npm**: v10.x or higher
+- **Supabase Account** (or local PostgreSQL with Supabase CLI)
 
-Create a `.env.example` file with placeholder values for required configuration.
+### 2. Environment Setup
+Copy the template environment variables:
+```bash
+cp .env.example .env
+cp .env.example client/.env
+cp .env.example server/.env
+```
+Fill in your `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the client, and `SUPABASE_SERVICE_ROLE_KEY` for privileged backend operations. 
 
-Never commit API keys, database passwords, service-role keys, payment secrets, or other credentials to version control.
+> **Note:** If Supabase environment variables are omitted, PHARMORA automatically boots in **Developer Demonstration Mode**, enabling full UI inspection and role switching across all 4 portal shells.
 
-Complete installation commands and scripts should be documented after the actual project structure has been established.
+### 3. Database Migration
+Apply the Phase 1 schema and Row Level Security policies via Supabase SQL Editor or Supabase CLI:
+```bash
+# Path to migration file:
+supabase/migrations/20261029000000_phase1_initial_schema.sql
+```
+This migration provisions:
+- Custom ENUMs: `app_role` (`CUSTOMER`, `PHARMACY_OWNER`, `DELIVERY_PARTNER`, `ADMIN`) and `account_status`.
+- `profiles` table synced via trigger on `auth.users` with self-escalation protection.
+- Baseline `pharmacies`, `delivery_partners`, and `audit_logs` tables with strict RLS policies.
+
+### 4. Running the Development Servers
+From the repository root:
+```bash
+# Install dependencies in both client and server:
+npm --prefix client install
+npm --prefix server install
+
+# Run frontend client (http://localhost:5173):
+npm run dev:client
+
+# Run backend API (http://localhost:5000):
+npm run dev:server
+```
+
+### 5. Running Production Builds
+```bash
+# Build both client and server:
+npm run build
+```
+
+### 6. Phase 1 Portal Navigation Map
+- **Public Homepage:** `http://localhost:5173/`
+- **Role Gateway Hub:** `http://localhost:5173/auth`
+- **Customer Sign In:** `http://localhost:5173/login`
+- **Pharmacy Portal & Onboarding:** `http://localhost:5173/pharmacy/login` & `/pharmacy/onboard`
+- **Delivery Partner Portal & Onboarding:** `http://localhost:5173/partner/login` & `/partner/onboard`
+- **Operations & Admin Command:** `http://localhost:5173/admin/login`
 
 ---
 
